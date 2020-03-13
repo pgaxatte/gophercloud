@@ -44,3 +44,40 @@ func List(client *gophercloud.ServiceClient, opts ListOptsBuilder) pagination.Pa
 		return EndpointGroupPage{pagination.LinkedPageBase{PageResult: r}}
 	})
 }
+
+// CreateOptsBuilder allows extensions to add additional parameters to
+// the Create request.
+type CreateOptsBuilder interface {
+	ToEndpointGroupCreateMap() (map[string]interface{}, error)
+}
+
+// CreateOpts provides options used to create an endpoint group.
+type CreateOpts struct {
+	// Name is the name of the new endpoint group.
+	Name string `json:"name" required:"true"`
+
+	// Filters is an EndpointFilter type describing the filter criteria
+	Filters EndpointFilter `json:"filters" required:"true"`
+
+	// Description is the description of the endpoint group
+	Description string `json:"description,omitempty"`
+}
+
+// ToEndpointGroupCreateMap formats a CreateOpts into a create request.
+func (opts CreateOpts) ToEndpointGroupCreateMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "endpoint_group")
+}
+
+// Create creates a new endpoint group
+func Create(client *gophercloud.ServiceClient, opts CreateOptsBuilder) (r CreateResult) {
+	b, err := opts.ToEndpointGroupCreateMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+	resp, err := client.Post(rootURL(client), &b, &r.Body, &gophercloud.RequestOpts{
+		OkCodes: []int{201},
+	})
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
+	return
+}

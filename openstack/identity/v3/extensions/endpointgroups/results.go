@@ -26,6 +26,12 @@ type GetResult struct {
 	commonResult
 }
 
+// CreateResult is the response from a Create operation. Call its Extract
+// method to interpret it as an EndpointGroup.
+type CreateResult struct {
+	commonResult
+}
+
 // EndpointFilter represents a set of one or several criteria to match endpoints.
 type EndpointFilter struct {
 	// Availability is the interface type to filter (admin, internal,

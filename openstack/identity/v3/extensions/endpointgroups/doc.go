@@ -28,5 +28,22 @@ Example to List all Endpoint Groups by name
 	for _, endpointgroup := range allGroups {
 		fmt.Printf("%+v\n", endpointgroup)
 	}
+
+Example to Create an Endpoint Group
+
+	createOpts := endpointgroups.CreateOpts{
+		Name:        "my-ep-group",
+		Description: "My endpoint group",
+		Filters:     endpointgroups.EndpointFilter{
+			Availability: gophercloud.AvailabilityPublic,
+			ServiceID:    "1234",
+			RegionID:     "5678",
+		},
+	}
+
+	endpointGroup, err := endpointgroups.Create(identityClient, createOpts).Extract()
+	if err != nil {
+		panic(err)
+	}
 */
 package endpointgroups

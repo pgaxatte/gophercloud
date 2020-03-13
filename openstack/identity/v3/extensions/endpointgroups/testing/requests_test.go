@@ -139,3 +139,68 @@ func TestListEndpointGroups(t *testing.T) {
 		return true, nil
 	})
 }
+
+func TestCreateSuccessful(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+
+	th.Mux.HandleFunc("/OS-EP-FILTER/endpoint_groups", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", client.TokenID)
+		th.TestJSONRequest(t, r, `
+		{
+			"endpoint_group": {
+			    "name": "endpointgroup1",
+			    "description": "public endpoint group 1",
+				"filters": {
+					"interface": "public",
+					"service_id": "1234",
+					"region_id": "5678"
+				}
+			}
+		}
+		`)
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprintf(w, `
+		{
+			"endpoint_group": {
+			    "id": "24",
+			    "filters": {
+				    "interface": "public",
+					"service_id": "1234",
+					"region_id": "5678"
+			    },
+			    "name": "endpointgroup1",
+			    "description": "public endpoint group 1",
+			    "links": {
+					"self": "https://localhost:5000/v3/OS-EP-FILTER/endpoint_groups/24"
+			    }
+			}
+		}
+		`)
+	})
+
+	filters := endpointgroups.EndpointFilter{
+		Availability: gophercloud.AvailabilityPublic,
+		ServiceID:    "1234",
+		RegionID:     "5678",
+	}
+
+	actual, err := endpointgroups.Create(
+		client.ServiceClient(),
+		endpointgroups.CreateOpts{
+			Filters:     filters,
+			Name:        "endpointgroup1",
+			Description: "public endpoint group 1",
+		}).Extract()
+	th.AssertNoErr(t, err)
+
+	expected := &endpointgroups.EndpointGroup{
+		ID:          "24",
+		Filters:     filters,
+		Name:        "endpointgroup1",
+		Description: "public endpoint group 1",
+	}
+	th.AssertDeepEquals(t, expected, actual)
+}
